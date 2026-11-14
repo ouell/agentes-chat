@@ -28,6 +28,20 @@ export interface ChatPrefs {
    * here because it is theirs alone, per workspace, on every device.
    */
   feedbackAuto?: boolean;
+  /**
+   * The board beside each channel, for this person (channel id → dashboard id). A fork's stand-in for
+   * `channels.dashboard_id` (ADR 0135 §21) that needs no migration; the whole map is saved at once.
+   */
+  channelBoards?: Record<string, string>;
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Only channel id → dashboard id pairs, at most `CHANNEL_BOARDS_MAX`. */
+export const CHANNEL_BOARDS_MAX = 500;
+function channelBoardsOf(v: unknown): Record<string, string> | undefined {
+  if (!v || typeof v !== "object" || Array.isArray(v)) return undefined;
+  const pairs = Object.entries(v).filter(([k, id]) => UUID.test(k) && typeof id === "string" && UUID.test(id));
+  return Object.fromEntries(pairs.slice(0, CHANNEL_BOARDS_MAX));
 }
 
 const oneOf = <T extends string>(list: readonly T[], v: unknown) => (list.includes(v as T) ? (v as T) : undefined);
@@ -43,6 +57,7 @@ export function chatPrefsOf(stored: unknown): ChatPrefs {
     openAt: oneOf(CHAT_OPEN_AT, o.openAt),
     textSize: oneOf(CHAT_TEXT_SIZES, o.textSize),
     feedbackAuto: typeof o.feedbackAuto === "boolean" ? o.feedbackAuto : undefined,
+    channelBoards: channelBoardsOf(o.channelBoards),
   };
   return Object.fromEntries(Object.entries(picks).filter(([, v]) => v !== undefined));
 }

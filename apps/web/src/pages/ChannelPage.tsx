@@ -269,6 +269,8 @@ import {
 } from "@/components/ConsultGroup";
 import { CorrectionAsk } from "@/components/CorrectionAsk";
 import { type ChannelActions, ChannelActionsContext, useChannelActions } from "@/components/channel-actions";
+import { ChannelBoard } from "@/components/channel-board/ChannelBoard";
+import { useChannelDashboard } from "@/components/channel-board/link";
 import { DatePill, type DatePillHandle } from "@/components/DatePill";
 import { DeleteChannelDialog } from "@/components/DeleteChannelDialog";
 import { MenuEntries } from "@/components/DesktopMenus";
@@ -356,7 +358,7 @@ import { BarAlsoTyping, BarPhrase, BarStep, ConsultClock, WorkingStack } from "@
 import { useChannelSearch } from "@/hooks/useChannelSearch";
 import { useComposerDraft } from "@/hooks/useComposerDraft";
 import { useDirectory } from "@/hooks/useDirectory";
-import { useDmSidebar, useMembersColumn } from "@/hooks/useMembersColumn";
+import { useChannelBoardColumn, useDmSidebar, useMembersColumn } from "@/hooks/useMembersColumn";
 import { useMentionSearch } from "@/hooks/useMentionSearch";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useRightHandLook } from "@/hooks/useRightHandLook";
@@ -989,6 +991,10 @@ function ChannelView({
   const [detailsOpen, setDetailsOpen] = useState(false);
   const membersColumn = useMembersColumn();
   const dmSidebar = useDmSidebar();
+  const boardColumn = useChannelBoardColumn();
+  const channelBoard = useChannelDashboard(channel);
+  // A channel with no dashboard: the one whose picker floats over the chat (whoever may link one asked for it).
+  const [choosingBoard, setChoosingBoard] = useState<string | null>(null);
   // Opened from a sidebar row's "Adicionar pessoas ou agentes": straight to adding, and closing that closes it all.
   const [addFirst, setAddFirst] = useState(false);
   // The members column's "Adicionar pessoa ou agente": the details' add flow alone, as from a sidebar row.
@@ -2308,6 +2314,15 @@ function ChannelView({
           toggle: () => toggleColumn(dmSidebar),
         }
       : null;
+  // The channel's dashboard (ADR 0135 §21): a column, or a panel on a narrow window, once one is linked. With none,
+  // the button is only for whoever may link one: it opens the picker over the chat, and linking shows the column.
+  const hasBoard = channelBoard.dashboardId !== null;
+  const boardButton = !chrome && (hasBoard || channelBoard.manages);
+  const picking = !hasBoard && choosingBoard === channel.id;
+  const boardLinked = () => {
+    setChoosingBoard(null);
+    if (!boardColumn.open) boardColumn.toggle();
+  };
   // It takes over from the conversation's skeleton (`ChannelSkeleton`): no second entrance of the whole view.
   const [continues] = useState(skeletonOnScreen);
 
@@ -2342,6 +2357,13 @@ function ChannelView({
                     agents={channelAgents}
                     membersOpen={!paneOpen && membersColumn.open}
                     onMembers={() => toggleColumn(membersColumn)}
+                    boardOpen={hasBoard ? !paneOpen && boardColumn.open : picking}
+                    {...(boardButton
+                      ? {
+                          onBoard: () =>
+                            hasBoard ? toggleColumn(boardColumn) : setChoosingBoard(picking ? null : channel.id),
+                        }
+                      : {})}
                     onDetails={() => setDetailsOpen(true)}
                     onSearch={openSearch}
                   />
@@ -2888,6 +2910,7 @@ function ChannelView({
                     dmAgent &&
                     dmSidebar.sheet && <AgentSidebar agent={dmAgent} onClose={dmSidebar.closeSheet} />
                   )}
+                  {!chrome && hasBoard && boardColumn.column && <ChannelBoard channel={channel} />}
                   {side && dmAgent && side.docked && !dmSidebar.sheet ? (
                     <AgentSidebar agent={dmAgent} />
                   ) : (
@@ -2903,6 +2926,13 @@ function ChannelView({
                   )}
                 </div>
               </Tag>
+              {!chrome && !profile && ((hasBoard && boardColumn.sheet) || picking) && (
+                <ChannelBoard
+                  channel={channel}
+                  onClose={() => (picking ? setChoosingBoard(null) : boardColumn.closeSheet())}
+                  onLinked={boardLinked}
+                />
+              )}
               {!chrome && !profile && membersColumn.sheet && (
                 <MembersSheet
                   channel={channel}

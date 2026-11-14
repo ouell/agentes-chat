@@ -55,6 +55,12 @@ export function taskSearch(search: Record<string, unknown>): { open?: string | n
   return { ...openSearch(search), ...m };
 }
 
+/** `validateSearch` for a page with a board: `widget`, the widget open in its side panel (ADR 0135 §14). */
+export function widgetSearch(search: Record<string, unknown>): { widget?: string } {
+  const v = search.widget;
+  return typeof v === "string" && v ? { widget: v } : {};
+}
+
 /** The thread open in the panel beside a conversation: `reply` puts the focus in its composer, `focus` opens at a message. */
 export interface ThreadPanel {
   id: string;

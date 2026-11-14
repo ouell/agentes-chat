@@ -78,6 +78,11 @@ export const ChatPrefs = z
       description:
         "Always send: a report an agent offers about the app goes with its reply, without asking; absent: it asks.",
     }),
+    channelBoards: z
+      .record(z.uuid(), z.uuid())
+      .refine((m) => Object.keys(m).length <= 500)
+      .optional()
+      .openapi({ description: "The board beside each channel, for you (channel id → dashboard id); the whole map." }),
   })
   .openapi("ChatPrefs");
 

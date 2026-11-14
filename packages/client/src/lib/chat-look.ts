@@ -31,6 +31,8 @@ export interface ChatPrefs {
   textSize?: ChatTextSize;
   /** "Always send": a report an agent offers about the app goes with its reply, without asking me. */
   feedbackAuto?: boolean;
+  /** The board beside each channel, for me (channel id → dashboard id; a fork's stand-in, ADR 0135 §21). */
+  channelBoards?: Record<string, string>;
 }
 
 /** Owner's decision: a channel reads as one log, and in a DM right and left already say who spoke. */

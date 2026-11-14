@@ -67,3 +67,17 @@ test("where the unread starts is in the channel list, and reading moves it", asy
   const after = (await list()).find((c) => c.id === before.id);
   expect(Date.parse(after?.lastReadAt ?? "")).toBeGreaterThan(Date.parse(before.lastReadAt));
 });
+
+test("the board beside each channel (this fork's stand-in for ADR 0135 §21): uuid pairs, the whole map", async () => {
+  const owner = browser(t);
+  await signUp(owner, "owner@example.com");
+  const { orgId } = await seedOrg(owner);
+  const put = (json: unknown) => owner(`/api/app/organizations/${orgId}/me/chat`, { method: "PUT", json });
+  const channel = crypto.randomUUID();
+  const board = crypto.randomUUID();
+  const saved = await put({ channelBoards: { [channel]: board } });
+  expect(saved.status).toBe(200);
+  expect(((await saved.json()) as { channelBoards: unknown }).channelBoards).toEqual({ [channel]: board });
+  expect((await put({ channelBoards: { general: board } })).status).toBe(400);
+  expect(((await (await put({ channelBoards: {} })).json()) as { channelBoards: unknown }).channelBoards).toEqual({});
+});

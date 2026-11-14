@@ -1,19 +1,23 @@
 import { channelMembersQuery, channelsQuery, channelThreadsQuery, messagesQuery } from "@agenteschat/client";
 import { isPaidReturn } from "@agenteschat/client/lib/billing";
 import { createFileRoute } from "@tanstack/react-router";
-import { threadSearch } from "@/lib/open-param";
+import { threadSearch, widgetSearch } from "@/lib/open-param";
 import { ChannelPage } from "@/pages/ChannelPage";
+
+/** The panels a channel's address keeps open: a thread, a widget of its dashboard. */
+type PanelSearch = ReturnType<typeof threadSearch> & ReturnType<typeof widgetSearch>;
+type ChannelSearch = PanelSearch & { m?: string; adjust?: string; paid?: true };
 
 /**
  * A channel; `?m={messageId}` (from "Copiar link") opens it at that message;
  * `?adjust={threadId}` opens "Ajustar trecho" for that thread's range; `?thread=` is the one in its panel; `?paid`:
- * back from paying for the workspace, which opens in #general (the hold banner says the payment is being confirmed).
+ * back from paying for the workspace, which opens in #general (the hold banner says the payment is being confirmed);
+ * `?widget=` is a widget of the channel's dashboard open in its panel (ADR 0135 §21).
  */
 export const Route = createFileRoute("/org/$orgId/c/$channelId")({
-  validateSearch: (
-    search: Record<string, unknown>,
-  ): { m?: string; adjust?: string; paid?: true } & ReturnType<typeof threadSearch> => ({
+  validateSearch: (search: Record<string, unknown>): ChannelSearch => ({
     ...threadSearch(search),
+    ...widgetSearch(search),
     ...(typeof search.m === "string" && search.m ? { m: search.m } : {}),
     ...(typeof search.adjust === "string" && search.adjust ? { adjust: search.adjust } : {}),
     ...(isPaidReturn(search) ? { paid: true as const } : {}),

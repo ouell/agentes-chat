@@ -1355,7 +1355,8 @@
       "install.scene.account",
       "install.scene.appLabel",
       "install.scene.downloads",
-      "devices.armBuild"
+      "devices.armBuild",
+      "channelBoard.chooseLabel"
     ],
     "it": [
       "calendar.moreRuns",
@@ -1700,7 +1701,8 @@
       "install.page.beta",
       "install.scene.finder",
       "install.scene.password",
-      "devices.armBuild"
+      "devices.armBuild",
+      "channelBoard.chooseLabel"
     ],
     "nl": [
       "calendar.moreRuns",
@@ -2271,7 +2273,8 @@
       "install.scene.account",
       "install.scene.appLabel",
       "install.scene.downloads",
-      "devices.armBuild"
+      "devices.armBuild",
+      "channelBoard.chooseLabel"
     ],
     "ja": [
       "devices.system.android",
@@ -3460,7 +3463,8 @@
       "install.page.beta",
       "install.page.system",
       "install.scene.finder",
-      "devices.armBuild"
+      "devices.armBuild",
+      "channelBoard.chooseLabel"
     ],
     "ru": [
       "devices.system.android",
